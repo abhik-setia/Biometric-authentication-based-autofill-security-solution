@@ -11,6 +11,9 @@ firebase.initializeApp(config);
 function initApp() {
 // Listen for auth state changes.
 // [START authstatelistener]
+
+Materialize.toast('Checking status of sign-in...', 2000);
+
 firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
     // User is signed in.
@@ -22,25 +25,19 @@ firebase.auth().onAuthStateChanged(function(user) {
     var uid = user.uid;
     var providerData = user.providerData;
 
-
-
-    // [START_EXCLUDE]
-    document.getElementById('quickstart-button').textContent = 'Sign out';
-    document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
-    //document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
-    console.log("writing database");
+    $("#after_login").show();
+    $("#before_login").hide();
+    //console.log("writing database");
     //writeUserData(uid,displayName,email,photoURL);
     readDB(uid);
     // [END_EXCLUDE]
   } else {
+    $("#after_login").hide();
+    $("#before_login").show();
     // Let's try to get a Google auth token programmatically.
-    // [START_EXCLUDE]
-    document.getElementById('quickstart-button').textContent = 'Sign-in with Google';
-    document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
-    document.getElementById('quickstart-account-details').textContent = 'null';
-    // [END_EXCLUDE]
+   
   }
-  document.getElementById('quickstart-button').disabled = false;
+  //document.getElementById('quickstart-button').disabled = false;
 });
 // [END authstatelistener]
 
