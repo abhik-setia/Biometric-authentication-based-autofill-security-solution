@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "Biometric Autologin Chrome App",
+  "description": "This chrome extension will let you sign-in automatically using bio-metric",
+  "version": "1",
+  "content_scripts": [
+    {
+      "matches": [
+        "http://172.16.0.1:8090/*"
+      ],
+      "js": ["js/jquery-3.2.1.min.js","js/myscript.js"]
+    }
+  ],
+  "icons": {
+    "16": "Icons/laptop.png",
+    "64":"Icons/laptop_64.png"
+  },
+  "browser_action": {
+    "default_icon": "Icons/laptop.png",
+    "default_popup": "credentials.html"
+  },
+  "permissions": [
+    "identity"
+  ],
+  "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'",
+  "oauth2": {
+    "client_id": "689550517879-qn428updhn1pcig7ob5p8dfktbn79iap.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/userinfo.profile"
+    ]
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy4q+3tz/2Tmc6Qdjeq8oYimk9mereHeFKiNXjNMvP/sUWjNXpExqDUv7KsBF8BGe8pPx0OTBMhX6cbkqqLvWtPa/OMMuqYg9H+pXYxArDM9G0sq1ocD+SwboyKOLVqLS0DlIUe6sP1H72MMq78G4eKWxSorBaxcc5W1qKs2ZP6H78wQG3LwoyP2so4+aLNxkeIKbOgSGlpErndCKbs4hmGXd/cyFkOW89LU8uiiMnoNjCQW//G8LKN4fps1J+V6vLivA2tZNX9X7aAZUKTnboaBGPowqdVJQII7kMGmuvj8I+uN2KVo/Oep2luvTpf1jiM/1Jq23yk0OE8rgAmWxUQIDAQAB",
+  "web_accessible_resources": [
+    "Icons/laptop_64.png"
+ ]
+}
