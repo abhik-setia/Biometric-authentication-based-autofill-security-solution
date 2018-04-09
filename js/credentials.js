@@ -127,10 +127,20 @@ function send_Notification(){
 hr.send(data);
       
 }
+chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
+  var curr_tab=tabs[0].url;
+  var urlPattern=new RegExp("https://twitter.com/*");
+  if(curr_tab.match(urlPattern)){
+    $("#landing_txt").text("Please provide sign in details for one time only.");
+
+    
+
+  }else{
+    $("#landing_txt").text("Hi,Please open twitter login page to autologin.");
+  }});
 
 window.onload = function() {
 initApp();
-document.getElementById("sn").addEventListener("click",send_Notification);
 };
 
 
