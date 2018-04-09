@@ -6,7 +6,7 @@
   "content_scripts": [
     {
       "matches": [
-        "http://172.16.0.1:8090/*"
+        "https://twitter.com/*"
       ],
       "js": ["js/jquery-3.2.1.min.js","js/myscript.js"]
     }
