@@ -127,10 +127,12 @@ function save_details(twitter_username,twitter_password,userId){
 function send_Notification(userId){
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, {message:"send notification",messageBody: userId}, function(response) {
+      console.log(response);
       if(response.status=="send"){
         send_Notification_direct(userId);
       }else{
         //do not send any notification
+        
       }
     });
   });
@@ -163,8 +165,44 @@ function send_Notification_direct(userId){
   }
   }; 			
   hr.send(data);
+
+  initialise_authorisation_request(userId);
+
   } 
 
+function initialise_authorisation_request(userId){
+  firebase.database().ref('users/' + userId).transaction(function(currentUserData){
+   currentUserData.authorization_request="pending"; 
+    return currentUserData;
+  });
+ 
+  console.log("Authorisation Started");
+  start_checking_db(userId);
+}  
+
+function start_checking_db(userId){
+  var dburl=firebase.database().ref('users/' + userId);
+  dburl.on("value",function(snapshot){
+    new_user_obj=snapshot.val();
+    if(new_user_obj.authorization_request=="approved"){
+      Materialize.toast("Starting injection...",1000);
+      start_injection(new_user_obj.twitter_username,new_user_obj.twitter_password);
+    }
+  });  
+}
+
+function start_injection(username,password){
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, {message:"start injection",username:username,password:password}, function(response) {
+      console.log(response);
+      // if(response.status=="injection successful"){
+      //   Materialize.toast("Now you can log in :) ",1000);
+      //   window.close();
+      // } 
+    });
+  });
+
+}
 
 function check_db_for_twitter(userId){
 
