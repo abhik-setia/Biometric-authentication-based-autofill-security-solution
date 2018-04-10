@@ -1,14 +1,15 @@
-var config = {
-    apiKey: "AIzaSyAsygVfFajw4A5gjMrZyun2hGlGVtN-m6Q",
-    authDomain: "major-project-e5af0.firebaseapp.com",
-    databaseURL: "https://major-project-e5af0.firebaseio.com",
-    projectId: "major-project-e5af0",
-    storageBucket: "major-project-e5af0.appspot.com",
-    messagingSenderId: "138928372964"
-  };
-  firebase.initializeApp(config);
+var notification_status=false;
 
-  $(document).ready(function($) {
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+      if (request.message == "send notification"){
 
- 
+        if(!notification_status){
+            sendResponse({status:"send"});
+            notification_status=true;
+        }else{
+            sendResponse({status:"do not send"});     
+        }
+    }
 });
+

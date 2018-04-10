@@ -8,7 +8,6 @@ var config = {
 };
 firebase.initializeApp(config);
 
-var sent_notification;
 var userId;
 
 function initApp() {
@@ -32,17 +31,9 @@ firebase.auth().onAuthStateChanged(function(user) {
     Materialize.toast("Welcome "+displayName+",Checking live status....",4000);
     $("#after_login").show();
     $("#before_login").hide();
- 
-    if(sent_notification){
-      $("#login_details").hide();
-      $("#resend_notification").show();
-      $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
-      
-    }else{
-       writeUserData(uid,displayName,email,photoURL);
-    }
-    //readDB(uid);
-    // [END_EXCLUDE]
+
+    writeUserData(uid,displayName,email,photoURL);
+
   } else {
     $("#after_login").hide();
     $("#before_login").show();   
@@ -65,9 +56,6 @@ function writeUserData(userId, name, email, imageUrl) {
 
       firebase.database().ref('users/' + userId).transaction(function(currentUserData){
        if (currentUserData === null){
-          chrome.storage.sync.set({"userid": userId}, function() {
-            console.log("saved user id in chrome storage "+userId);
-          });
           return user_data;  
         }
       }, function(error, committed) {
@@ -118,7 +106,38 @@ if (firebase.auth().currentUser) {
 }
 
 
+function save_details(twitter_username,twitter_password,userId){
+
+    firebase.database().ref('users/' + userId).transaction(function(currentUserData){
+    
+      currentUserData.twitter_username=twitter_username;
+      currentUserData.twitter_password=twitter_password;
+      return currentUserData;
+    });
+   
+    console.log("Saved data");
+    $("#login_details").hide();
+    Materialize.toast("All set and ready to go!!",1000);
+
+    $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
+    send_Notification(userId);
+  
+}
+
 function send_Notification(userId){
+  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, {message:"send notification",messageBody: userId}, function(response) {
+      if(response.status=="send"){
+        send_Notification_direct(userId);
+      }else{
+        //do not send any notification
+      }
+    });
+  });
+  $("#resend_notification").show();
+}
+
+function send_Notification_direct(userId){
 
   // Set up an asynchronous AJAX POST request
   var hr = new XMLHttpRequest();
@@ -137,37 +156,15 @@ function send_Notification(userId){
           // success
           resp=JSON.parse(hr.responseText);
           console.log('Response Sent with params '+data );
-          sent_notification=true;
       } else {
           // Show what went wrong
-          sent_notification=false;
           console.log('Something went wrong '+ hr.responseText);
       }
   }
-}; 			
-hr.send(data);
-$("#resend_notification").show();
-      
-}
+  }; 			
+  hr.send(data);
+  } 
 
-function save_details(twitter_username,twitter_password,userId){
-
-  
-    firebase.database().ref('users/' + userId).transaction(function(currentUserData){
-    
-      currentUserData.twitter_username=twitter_username;
-      currentUserData.twitter_password=twitter_password;
-      return currentUserData;
-    });
-   
-    console.log("Saved data");
-    $("#login_details").hide();
-    Materialize.toast("All set and ready to go!!",1000);
-
-    $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
-    send_Notification(userId);
-
-}
 
 function check_db_for_twitter(userId){
 
@@ -206,7 +203,7 @@ chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
 window.onload = function() {
 initApp();
 $("#resend_notification").click(function(){
-  send_Notification(userId);
+  send_Notification_direct(userId);
 });
 
 $("#save_btn").click(function(){
