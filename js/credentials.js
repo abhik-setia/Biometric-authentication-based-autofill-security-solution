@@ -28,15 +28,16 @@ firebase.auth().onAuthStateChanged(function(user) {
     var uid = user.uid;
     var providerData = user.providerData;
 
+    userId=uid;
     Materialize.toast("Welcome "+displayName+",Checking live status....",4000);
     $("#after_login").show();
     $("#before_login").hide();
  
-    if(send_Notification){
+    if(sent_notification){
       $("#login_details").hide();
       $("#resend_notification").show();
       $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
-      userId=uid;
+      
     }else{
        writeUserData(uid,displayName,email,photoURL);
     }
@@ -59,7 +60,8 @@ function writeUserData(userId, name, email, imageUrl) {
       email: email,
       profile_picture : imageUrl,
       twitter_username:"",
-      twitter_password:""};
+      twitter_password:"",
+      authorization_request:"Not Initialised"};
 
       firebase.database().ref('users/' + userId).transaction(function(currentUserData){
        if (currentUserData === null){
@@ -125,7 +127,7 @@ function send_Notification(userId){
   hr.open("POST", url, true);
   hr.setRequestHeader('Content-Type','application/json');
   hr.setRequestHeader('Authorization','key=AAAAIFjGvOQ:APA91bExRs9a6obdSf9BZIMDwZvNN_0NeLr6kS5jDq3kHQcUsKKh3JlNQpLOf9scnPvVGrpf97HOe0aCj71nMBe83O1AIIEFbbNgoRHQDJI64ejAOdpv8XNdxhNtFO_9wJvHogwdZIKh');      
-  var data='{"to" : "dbuPCb0LkoE:APA91bGNsyxBpYtYJqt2s9a1zr9ElMS7-gdlsPe8yJzk3AKxdQIpTGfEfSBRCGfWeEawjmTEu-SjNpH0W-zhu3Di1KDTRx7bPaanA1c6m_sKX2fyqNvVHiuHD4AAPchLT0TdaTvKajKf","notification" : {"body" : "Need Authorisation for autologin.","title" : "Twitter autologin request","content_available" : true,"priority" : "high","icon":"ic_drawable"},"data" : {"userId":"'+userId+'"}}';
+  var data='{"to" : "dbuPCb0LkoE:APA91bGNsyxBpYtYJqt2s9a1zr9ElMS7-gdlsPe8yJzk3AKxdQIpTGfEfSBRCGfWeEawjmTEu-SjNpH0W-zhu3Di1KDTRx7bPaanA1c6m_sKX2fyqNvVHiuHD4AAPchLT0TdaTvKajKf","notification" : {"body" : "Need Authorisation for autologin.","title" : "Twitter autologin request","content_available" : true,"priority" : "high","icon":"ic_launcher"},"data" : {"userId":"'+userId+'"}}';
 
   // Handle request state change events
   hr.onreadystatechange = function() { 
@@ -144,7 +146,27 @@ function send_Notification(userId){
   }
 }; 			
 hr.send(data);
+$("#resend_notification").show();
       
+}
+
+function save_details(twitter_username,twitter_password,userId){
+
+  
+    firebase.database().ref('users/' + userId).transaction(function(currentUserData){
+    
+      currentUserData.twitter_username=twitter_username;
+      currentUserData.twitter_password=twitter_password;
+      return currentUserData;
+    });
+   
+    console.log("Saved data");
+    $("#login_details").hide();
+    Materialize.toast("All set and ready to go!!",1000);
+
+    $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
+    send_Notification(userId);
+
 }
 
 function check_db_for_twitter(userId){
@@ -186,6 +208,17 @@ initApp();
 $("#resend_notification").click(function(){
   send_Notification(userId);
 });
+
+$("#save_btn").click(function(){
+  twitter_username=$("#username").val();
+  twitter_password=$("#password").val();
+
+  if(!twitter_username || !twitter_password)
+{
+  Materialize.toast("Please fill all details",1000);
+}else
+  save_details(twitter_username,twitter_password,userId);
+})
 };
 
 
