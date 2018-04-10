@@ -8,6 +8,9 @@ var config = {
 };
 firebase.initializeApp(config);
 
+var sent_notification;
+var userId;
+
 function initApp() {
 // Listen for auth state changes.
 // [START authstatelistener]
@@ -29,7 +32,14 @@ firebase.auth().onAuthStateChanged(function(user) {
     $("#after_login").show();
     $("#before_login").hide();
  
-    writeUserData(uid,displayName,email,photoURL);
+    if(send_Notification){
+      $("#login_details").hide();
+      $("#resend_notification").show();
+      $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
+      userId=uid;
+    }else{
+       writeUserData(uid,displayName,email,photoURL);
+    }
     //readDB(uid);
     // [END_EXCLUDE]
   } else {
@@ -106,7 +116,7 @@ if (firebase.auth().currentUser) {
 }
 
 
-function send_Notification(){
+function send_Notification(userId){
 
   // Set up an asynchronous AJAX POST request
   var hr = new XMLHttpRequest();
@@ -115,7 +125,7 @@ function send_Notification(){
   hr.open("POST", url, true);
   hr.setRequestHeader('Content-Type','application/json');
   hr.setRequestHeader('Authorization','key=AAAAIFjGvOQ:APA91bExRs9a6obdSf9BZIMDwZvNN_0NeLr6kS5jDq3kHQcUsKKh3JlNQpLOf9scnPvVGrpf97HOe0aCj71nMBe83O1AIIEFbbNgoRHQDJI64ejAOdpv8XNdxhNtFO_9wJvHogwdZIKh');      
-  var data='{"to" : "dbuPCb0LkoE:APA91bGNsyxBpYtYJqt2s9a1zr9ElMS7-gdlsPe8yJzk3AKxdQIpTGfEfSBRCGfWeEawjmTEu-SjNpH0W-zhu3Di1KDTRx7bPaanA1c6m_sKX2fyqNvVHiuHD4AAPchLT0TdaTvKajKf","notification" : {"body" : "great match!","title" : "Portugal vs. Denmark","content_available" : true,"priority" : "high"},"data" : {"body" : "great match!","title" : "Portugal vs. Denmark","content_available" : true,"priority" : "high"}}';
+  var data='{"to" : "dbuPCb0LkoE:APA91bGNsyxBpYtYJqt2s9a1zr9ElMS7-gdlsPe8yJzk3AKxdQIpTGfEfSBRCGfWeEawjmTEu-SjNpH0W-zhu3Di1KDTRx7bPaanA1c6m_sKX2fyqNvVHiuHD4AAPchLT0TdaTvKajKf","notification" : {"body" : "Need Authorisation for autologin.","title" : "Twitter autologin request","content_available" : true,"priority" : "high","icon":"ic_drawable"},"data" : {"userId":"'+userId+'"}}';
 
   // Handle request state change events
   hr.onreadystatechange = function() { 
@@ -125,8 +135,10 @@ function send_Notification(){
           // success
           resp=JSON.parse(hr.responseText);
           console.log('Response Sent with params '+data );
+          sent_notification=true;
       } else {
           // Show what went wrong
+          sent_notification=false;
           console.log('Something went wrong '+ hr.responseText);
       }
   }
@@ -143,7 +155,10 @@ function check_db_for_twitter(userId){
 
     if(user_obj.twitter_password!="" && user_obj.twitter_username!=""){
       $("#login_details").hide();
-      $("#landing_txt").text("Let's roll....");   
+      $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
+      send_Notification(userId);       
+    }else{
+      $("#login_details").show();
     }  
 
   });
@@ -164,8 +179,13 @@ chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
     $("#login_details").hide();
   }});
 
+  
+
 window.onload = function() {
 initApp();
+$("#resend_notification").click(function(){
+  send_Notification(userId);
+});
 };
 
 
