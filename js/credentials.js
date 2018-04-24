@@ -27,6 +27,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     var uid = user.uid;
     var providerData = user.providerData;
 
+    console.log(uid);
     userId=uid;
     Materialize.toast("Welcome "+displayName+",Checking live status....",4000);
     $("#after_login").show();
@@ -52,6 +53,7 @@ function writeUserData(userId, name, email, imageUrl) {
       profile_picture : imageUrl,
       twitter_username:"",
       twitter_password:"",
+      notification_token:"",
       authorization_request:"Not Initialised"};
 
       firebase.database().ref('users/' + userId).transaction(function(currentUserData){
@@ -129,17 +131,27 @@ function send_Notification(userId){
     chrome.tabs.sendMessage(tabs[0].id, {message:"send notification",messageBody: userId}, function(response) {
       console.log(response);
       if(response.status=="send"){
-        send_Notification_direct(userId);
+        getNotificationToken(userId);
       }else{
         //do not send any notification
-        
       }
     });
   });
   $("#resend_notification").show();
 }
 
-function send_Notification_direct(userId){
+function getNotificationToken(userId){
+
+  var dburl=firebase.database().ref('users/' + userId);
+  dburl.once('value',function(snapshot){
+    var user_obj=snapshot.val();
+    var notification_token=user_obj.notification_token;
+    send_Notification_direct(userId,notification_token);
+  });
+
+}
+
+function send_Notification_direct(userId,notification_token){
 
   // Set up an asynchronous AJAX POST request
   var hr = new XMLHttpRequest();
@@ -148,7 +160,7 @@ function send_Notification_direct(userId){
   hr.open("POST", url, true);
   hr.setRequestHeader('Content-Type','application/json');
   hr.setRequestHeader('Authorization','key=AAAAIFjGvOQ:APA91bExRs9a6obdSf9BZIMDwZvNN_0NeLr6kS5jDq3kHQcUsKKh3JlNQpLOf9scnPvVGrpf97HOe0aCj71nMBe83O1AIIEFbbNgoRHQDJI64ejAOdpv8XNdxhNtFO_9wJvHogwdZIKh');      
-  var data='{"to" : "dbuPCb0LkoE:APA91bGNsyxBpYtYJqt2s9a1zr9ElMS7-gdlsPe8yJzk3AKxdQIpTGfEfSBRCGfWeEawjmTEu-SjNpH0W-zhu3Di1KDTRx7bPaanA1c6m_sKX2fyqNvVHiuHD4AAPchLT0TdaTvKajKf","notification" : {"body" : "Need Authorisation for autologin.","title" : "Twitter autologin request","content_available" : true,"priority" : "high","icon":"ic_launcher"},"data" : {"userId":"'+userId+'"}}';
+  var data='{"to" : "'+notification_token+'","notification" : {"body" : "Need Authorisation for autologin.","title" : "Twitter autologin request","content_available" : true,"priority" : "high","icon":"ic_launcher"},"data" : {"userId":"'+userId+'"}}';
 
   // Handle request state change events
   hr.onreadystatechange = function() { 
@@ -195,10 +207,13 @@ function start_injection(username,password){
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, {message:"start injection",username:username,password:password}, function(response) {
       console.log(response);
-      // if(response.status=="injection successful"){
-      //   Materialize.toast("Now you can log in :) ",1000);
-      //   window.close();
-      // } 
+       if(response.status=="injection successful"){
+         Materialize.toast("Now you can log in :) ",5000);
+        setTimeout(function(){
+          window.close();
+        },2000);
+         
+       } 
     });
   });
 
@@ -241,7 +256,7 @@ chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
 window.onload = function() {
 initApp();
 $("#resend_notification").click(function(){
-  send_Notification_direct(userId);
+  getNotificationToken(userId);
 });
 
 $("#save_btn").click(function(){
