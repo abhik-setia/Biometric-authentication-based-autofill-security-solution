@@ -121,7 +121,7 @@ function save_details(twitter_username,twitter_password,userId){
     $("#login_details").hide();
     Materialize.toast("All set and ready to go!!",1000);
 
-    $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
+  //  $("#landing_txt").text("Notification has been sent to your device, please authorise request.");
     send_Notification(userId);
   
 }
@@ -146,7 +146,13 @@ function getNotificationToken(userId){
   dburl.once('value',function(snapshot){
     var user_obj=snapshot.val();
     var notification_token=user_obj.notification_token;
-    send_Notification_direct(userId,notification_token);
+    if(notification_token==""){
+      $("#landing_txt").text("Please register with app to continue.");
+      $("#resend_notification").hide();
+      //Materialize.toast("Please register with app to continue",4000);  
+
+    }else{
+    send_Notification_direct(userId,notification_token);}
   });
 
 }
